@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
+import PhotoAlbum from '@/components/PhotoAlbum';
 
 const API_URL = 'https://functions.poehali.dev/a6e85038-4626-4111-b071-e9dc59fb4e6d';
 
@@ -40,6 +40,8 @@ export default function Index() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAlbumOpen, setIsAlbumOpen] = useState(false);
+  const [albumStartIndex, setAlbumStartIndex] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -155,31 +157,29 @@ export default function Index() {
             <TabsContent value={selectedCategory} className="animate-fade-in">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredImages.map((image, index) => (
-                  <Dialog key={image.id}>
-                    <DialogTrigger asChild>
-                      <Card 
-                        className="overflow-hidden cursor-pointer hover-lift group animate-scale-in"
-                        style={{ animationDelay: `${index * 100}ms` }}
-                      >
-                        <div className="relative aspect-square overflow-hidden">
-                          <img 
-                            src={image.url} 
-                            alt={image.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
-                            <div>
-                              <h3 className="text-xl font-bold text-white mb-2">{image.title}</h3>
-                              <p className="text-sm text-white/80">Нажмите для увеличения</p>
-                            </div>
-                          </div>
+                  <Card 
+                    key={image.id}
+                    className="overflow-hidden cursor-pointer hover-lift group animate-scale-in"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                    onClick={() => {
+                      setAlbumStartIndex(index);
+                      setIsAlbumOpen(true);
+                    }}
+                  >
+                    <div className="relative aspect-square overflow-hidden">
+                      <img 
+                        src={image.url} 
+                        alt={image.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                        <div>
+                          <h3 className="text-xl font-bold text-white mb-2">{image.title}</h3>
+                          <p className="text-sm text-white/80">Нажмите для просмотра</p>
                         </div>
-                      </Card>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl">
-                      <img src={image.url} alt={image.title} className="w-full h-auto rounded-lg" />
-                    </DialogContent>
-                  </Dialog>
+                      </div>
+                    </div>
+                  </Card>
                 ))}
               </div>
             </TabsContent>
@@ -281,6 +281,13 @@ export default function Index() {
       <footer className="py-8 px-6 border-t border-border text-center">
         <p className="text-foreground/60">© 2024 Lens Artistry. Все права защищены.</p>
       </footer>
+
+      <PhotoAlbum
+        photos={filteredImages}
+        isOpen={isAlbumOpen}
+        onClose={() => setIsAlbumOpen(false)}
+        initialIndex={albumStartIndex}
+      />
     </div>
   );
 }

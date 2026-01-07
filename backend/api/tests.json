@@ -1,0 +1,44 @@
+{
+  "tests": [
+    {
+      "name": "Get all portfolio images",
+      "method": "GET",
+      "path": "/?action=portfolio",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "images": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get portfolio images by category",
+      "method": "GET",
+      "path": "/?action=portfolio&category=wedding",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "images": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get published reviews",
+      "method": "GET",
+      "path": "/?action=reviews",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "reviews": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get active services",
+      "method": "GET",
+      "path": "/?action=services",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "services": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

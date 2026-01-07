@@ -1,65 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 
-const portfolioImages = [
-  {
-    id: 1,
-    url: 'https://cdn.poehali.dev/projects/2ed10d79-95ee-401e-9e47-13fb0462285c/files/16c41f00-5a76-4d3d-a568-7acf704b7c78.jpg',
-    category: 'wedding',
-    title: 'Свадебная церемония',
-  },
-  {
-    id: 2,
-    url: 'https://cdn.poehali.dev/projects/2ed10d79-95ee-401e-9e47-13fb0462285c/files/3fc3b648-e11d-4500-9b81-91f3b6bcf62c.jpg',
-    category: 'portrait',
-    title: 'Портретная съемка',
-  },
-  {
-    id: 3,
-    url: 'https://cdn.poehali.dev/projects/2ed10d79-95ee-401e-9e47-13fb0462285c/files/5237db0d-7643-438d-9708-1bc9d77f892c.jpg',
-    category: 'nature',
-    title: 'Пейзажная съемка',
-  },
-  {
-    id: 4,
-    url: 'https://cdn.poehali.dev/projects/2ed10d79-95ee-401e-9e47-13fb0462285c/files/16c41f00-5a76-4d3d-a568-7acf704b7c78.jpg',
-    category: 'wedding',
-    title: 'Love Story',
-  },
-  {
-    id: 5,
-    url: 'https://cdn.poehali.dev/projects/2ed10d79-95ee-401e-9e47-13fb0462285c/files/3fc3b648-e11d-4500-9b81-91f3b6bcf62c.jpg',
-    category: 'portrait',
-    title: 'Студийный портрет',
-  },
-  {
-    id: 6,
-    url: 'https://cdn.poehali.dev/projects/2ed10d79-95ee-401e-9e47-13fb0462285c/files/5237db0d-7643-438d-9708-1bc9d77f892c.jpg',
-    category: 'nature',
-    title: 'Закат в горах',
-  },
-];
+const API_URL = 'https://functions.poehali.dev/a6e85038-4626-4111-b071-e9dc59fb4e6d';
 
-const services = [
-  { icon: 'Camera', title: 'Свадебная съемка', price: 'от 50 000 ₽', description: 'Полный день съемки с лучшими моментами вашего торжества' },
-  { icon: 'User', title: 'Портретная съемка', price: 'от 15 000 ₽', description: 'Индивидуальная или семейная фотосессия в студии или на природе' },
-  { icon: 'Mountain', title: 'Пейзажная съемка', price: 'от 20 000 ₽', description: 'Профессиональная съемка природы и архитектуры' },
-  { icon: 'Baby', title: 'Детская съемка', price: 'от 12 000 ₽', description: 'Трогательные моменты детства в естественной обстановке' },
-];
+interface PortfolioImage {
+  id: number;
+  title: string;
+  url: string;
+  category: string;
+  description?: string;
+  display_order: number;
+}
 
-const reviews = [
-  { name: 'Анна и Дмитрий', text: 'Потрясающие фотографии! Каждый кадр — произведение искусства. Спасибо за сохраненные воспоминания!', rating: 5 },
-  { name: 'Екатерина', text: 'Очень профессиональный подход, комфортная атмосфера на съемке. Результат превзошел все ожидания!', rating: 5 },
-  { name: 'Михаил', text: 'Креативный фотограф с отличным чувством композиции. Рекомендую всем!', rating: 5 },
-];
+interface Review {
+  id: number;
+  client_name: string;
+  review_text: string;
+  rating: number;
+  created_at?: string;
+}
+
+interface Service {
+  id: number;
+  title: string;
+  description: string;
+  price_from: number;
+  icon_name: string;
+  display_order: number;
+}
 
 export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activeSection, setActiveSection] = useState('home');
+  const [portfolioImages, setPortfolioImages] = useState<PortfolioImage[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [portfolioRes, reviewsRes, servicesRes] = await Promise.all([
+          fetch(`${API_URL}?action=portfolio`),
+          fetch(`${API_URL}?action=reviews`),
+          fetch(`${API_URL}?action=services`)
+        ]);
+
+        const portfolioData = await portfolioRes.json();
+        const reviewsData = await reviewsRes.json();
+        const servicesData = await servicesRes.json();
+
+        setPortfolioImages(portfolioData.images || []);
+        setReviews(reviewsData.reviews || []);
+        setServices(servicesData.services || []);
+      } catch (error) {
+        console.error('Ошибка загрузки данных:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const filteredImages = selectedCategory === 'all' 
     ? portfolioImages 
@@ -133,6 +139,11 @@ export default function Index() {
         <div className="container mx-auto">
           <h2 className="text-5xl font-bold text-center mb-12 animate-fade-in">Портфолио</h2>
           
+          {loading ? (
+            <div className="text-center py-20">
+              <p className="text-foreground/70">Загрузка...</p>
+            </div>
+          ) : (
           <Tabs defaultValue="all" className="w-full" onValueChange={setSelectedCategory}>
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-4 mb-12">
               <TabsTrigger value="all">Все</TabsTrigger>
@@ -173,6 +184,7 @@ export default function Index() {
               </div>
             </TabsContent>
           </Tabs>
+          )}
         </div>
       </section>
 
@@ -190,10 +202,10 @@ export default function Index() {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mb-4 rotate-6 hover:rotate-12 transition-transform">
-                  <Icon name={service.icon as any} className="text-white" size={28} />
+                  <Icon name={service.icon_name as any} className="text-white" size={28} />
                 </div>
                 <h3 className="text-xl font-bold mb-2">{service.title}</h3>
-                <p className="text-3xl font-bold text-primary mb-3">{service.price}</p>
+                <p className="text-3xl font-bold text-primary mb-3">от {service.price_from.toLocaleString()} ₽</p>
                 <p className="text-foreground/70 text-sm">{service.description}</p>
               </Card>
             ))}
@@ -217,8 +229,8 @@ export default function Index() {
                     <Icon key={i} name="Star" className="text-accent fill-accent" size={20} />
                   ))}
                 </div>
-                <p className="text-foreground/90 mb-4 italic">"{review.text}"</p>
-                <p className="font-semibold text-primary">— {review.name}</p>
+                <p className="text-foreground/90 mb-4 italic">"{review.review_text}"</p>
+                <p className="font-semibold text-primary">— {review.client_name}</p>
               </Card>
             ))}
           </div>
